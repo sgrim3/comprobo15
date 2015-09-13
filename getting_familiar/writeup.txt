@@ -1,0 +1,2 @@
+How might rosbag fit into a debugging process as you work on projects in this class?
+Are there any obvious shortcomings of rosbag as a debugging tool?
