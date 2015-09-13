@@ -21,7 +21,6 @@ marker.header.frame_id = "base_link"
 	# pose = Pose(position=Point(x=1,y=new_y))
 
 pub = rospy.Publisher("/my_marker", Marker, queue_size=10)
-# sub = rospy.Subscriber("/my_marker", Marker, handle_listener)
 
 r=rospy.Rate(10)
 

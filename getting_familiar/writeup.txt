@@ -1,2 +1,9 @@
 How might rosbag fit into a debugging process as you work on projects in this class?
 Are there any obvious shortcomings of rosbag as a debugging tool?
+
+What happens when you run this code?  What assumption can you safely make about any code that you put in a sensor callback?  In what ways might the behavior you observe be suboptimal when programming a robot?
+	This code makes the robot wait ten seconds before printing. You can assume that any code put in a callback won't happen until it receives the message from the subscriber. 
+
+
+
+You don't lose any data, but there's a lag with the queue. This is good if you want to see every packet or message, but it's bad when you need things in real time. 
