@@ -1,0 +1,86 @@
+#!/usr/bin/env python
+
+import rospy
+from geometry_msgs.msg import Twist
+from sensor_msgs.msg import LaserScan
+twist=Twist()
+
+class wallFollowing():
+    """ A ROS node that implements a proportional controller to approach an obstacle
+        immediately in front of the robot """
+
+    def __init__(self):
+        """ Initialize a node with the specified target distance
+            from the forward obstacle """
+        rospy.init_node('test3')
+        #self.target_distance = rospy.get_param('~target_distance')
+        self.sub=rospy.Subscriber("/scan",LaserScan, self.processScan)
+        self.pub=rospy.Publisher("cmd_vel",Twist,queue_size=10)
+        self.twist=Twist()
+        self.topAverage=0
+        self.bottomAverage=0
+        self.bottomLeftList=[]
+        self.bottomRightList=[]
+        self.topLeftList=[]
+        self.topRightList=[]
+        self.topList=[]
+        self.bottomList=[]
+
+    def processScan(self,msg):
+        i=0
+
+        while i<10:
+          
+          self.topLeftList.append(msg.ranges[i+60])
+          self.bottomLeftList.append(msg.ranges[120-i])
+          self.bottomRightList.append(msg.ranges[i+240])
+          self.topRightList.append(msg.ranges[310-i])
+
+          # self.topLeftList.append(msg.ranges[90-i])
+          # self.bottomLeftList.append(msg.ranges[90+i])
+          # self.bottomRightList.append(msg.ranges[270-i])
+          # self.topRightList.append(msg.ranges[270+i])
+          
+          i+=1
+          
+          for eachnum in self.topLeftList:
+            if eachnum != 0:
+              self.topList.append(eachnum)
+              
+          for eachnum in self.topRightList:
+            if eachnum != 0:
+              self.topList.append(eachnum)      
+                        
+          for eachnum in self.bottomRightList:
+            if eachnum != 0:
+              self.bottomList.append(eachnum)   
+          for eachnum in self.bottomLeftList:
+            if eachnum != 0:
+              self.bottomList.append(eachnum) 
+
+        self.bottomAverage=sum(self.bottomList)/float(len(self.bottomList))
+        self.topAverage=sum(self.topList)/float(len(self.topList))    
+              
+
+    def run(self):
+        """ Our main 5Hz run loop """
+        r = rospy.Rate(5)
+        while not rospy.is_shutdown():
+          diff= self.topAverage-self.bottomAverage
+          if (diff<0.035 and diff>-0.035):
+          # if (diff==0):
+            print "in if"
+            self.twist.angular.z=0
+            self.twist.linear.x=.1
+          else: 
+            self.twist.angular.z=(self.topAverage-self.bottomAverage)*0.5
+          # self.twist.angular.z=(self.bottomAverage-self.topAverage)*0.9
+          print "diff= " +str(diff)
+          print "z = "+str(self.twist.angular.z)
+          self.twist.linear.x=0.1
+          self.pub.publish(self.twist)
+          r.sleep()
+
+if __name__ == '__main__':
+    node = wallFollowing()
+    node.run()

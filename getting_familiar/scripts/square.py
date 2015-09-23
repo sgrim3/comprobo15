@@ -25,3 +25,6 @@ def mover():
 #while loop to keep repeating mover until ctrl-c
 while not rospy.is_shutdown(): 
     mover()
+
+
+

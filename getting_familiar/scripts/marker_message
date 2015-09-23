@@ -15,10 +15,6 @@ scale = Vector3(x=.1,y=.1,z=.1)
 marker = Marker(pose=pose, color=color, scale = scale, type =2)
 marker.header.frame_id = "base_link"
 
-# def handle_listener (msg):
-# 	new_y = msg.pose.position.y +1
-# 	print new_y
-	# pose = Pose(position=Point(x=1,y=new_y))
 
 pub = rospy.Publisher("/my_marker", Marker, queue_size=10)
 
