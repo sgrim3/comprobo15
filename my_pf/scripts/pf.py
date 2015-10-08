@@ -20,7 +20,7 @@ import math
 import time
 
 import numpy as np
-from numpy.random import random_sample
+from numpy.random import random_sample, randn
 from sklearn.neighbors import NearestNeighbors
 from occupancy_field import OccupancyField
 
@@ -118,8 +118,10 @@ class ParticleFilter:
         # TODO: fill in the appropriate service call here.  The resultant map should be assigned be passed
         #       into the init method for OccupancyField
 
+        gettingMap = rospy.ServiceProxy('static_map',GetMap)
+        myMap = gettingMap().map
         # for now we have commented out the occupancy field initialization until you can successfully fetch the map
-        #self.occupancy_field = OccupancyField(map)
+        self.occupancy_field = OccupancyField(myMap)
         self.initialized = True
 
     def update_robot_pose(self):
@@ -134,6 +136,12 @@ class ParticleFilter:
         # TODO: assign the lastest pose into self.robot_pose as a geometry_msgs.Pose object
         # just to get started we will fix the robot's pose to always be at the origin
         self.robot_pose = Pose()
+        best_particle = Particle(0,0,0,0)
+        for particle in self.particle_cloud:
+            if particle.w > best_particle.w:
+                best_particle = particle
+        self.robot_pose = best_particle.as_pose()
+        #print "updated pose" + str(self.robot_pose)
 
     def update_particles_with_odom(self, msg):
         """ Update the particles using the newly given odometry pose.
@@ -155,6 +163,14 @@ class ParticleFilter:
         else:
             self.current_odom_xy_theta = new_odom_xy_theta
             return
+          
+        for particle in self.particle_cloud: 
+              psi = math.atan2(delta[1],delta[0])- old_odom_xy_theta[2]
+              r = math.sqrt((delta[0])**2 + (delta[1])**2)
+              particle.x=particle.x+ r*math.cos(old_odom_xy_theta[2]+psi)
+              particle.y = particle.y + r*math.sin(old_odom_xy_theta[2]+psi)
+              particle.theta = old_odom_xy_theta[2] + delta[2]
+              
 
         # TODO: modify particles using delta
         # For added difficulty: Implement sample_motion_odometry (Prob Rob p 136)
@@ -173,11 +189,42 @@ class ParticleFilter:
         # make sure the distribution is normalized
         self.normalize_particles()
         # TODO: fill out the rest of the implementation
+        new_particles = []
+        probabilities = []
+        for particle in self.particle_cloud:
+            probabilities.append(particle.w)
+        new_particles = ParticleFilter.draw_random_sample(self.particle_cloud, probabilities, len(self.particle_cloud))
+        self.particle_cloud = new_particles
+        print 'Particle cloud element 0' + '%s' %str(self.particle_cloud[0].x) + str(self.particle_cloud[0].y)
+        print 'Particle cloud element 1' + '%s' %str(self.particle_cloud[1].x) + str(self.particle_cloud[1].y)
+
 
     def update_particles_with_laser(self, msg):
         """ Updates the particle weights in response to the scan contained in the msg """
         # TODO: implement this
-        pass
+        #print str(msg.range[0])
+        #We ctually need to go through all of the range so a for loop form 0 to 360
+        #We also need to delete any ranges that return 0 because that is a false reading and causes problems
+        #print msg
+
+        for part in self.particle_cloud:
+            total_distace = 0
+            average_distance = 0
+            count = 0
+            for angle in range(359):
+                distance_in_front = msg.ranges[angle]
+                if distance_in_front == 0:
+                    pass
+                else:
+                    count +=1
+                    rad = angle/360 * 2 * math.pi
+                    part.x = part.x + distance_in_front*math.cos(part.theta + rad)
+                    part.y = part.y + distance_in_front*math.sin(part.theta + rad)
+                    distance = OccupancyField.get_closest_obstacle_distance(self.occupancy_field, part.x, part.y)
+                    total_distace += distance
+            average_distance = total_distace/count
+            part.w=(math.e**((-average_distance)**2))
+        #pass
 
     @staticmethod
     def weighted_values(values, probabilities, size):
@@ -220,15 +267,29 @@ class ParticleFilter:
         if xy_theta == None:
             xy_theta = convert_pose_to_xy_and_theta(self.odom_pose.pose)
         self.particle_cloud = []
+
+        #one particle at origin
+        #self.particle_cloud.append(Particle(0,0,0))
         # TODO create particles
+
+        for i in range(self.n_particles):
+            self.particle_cloud.append(Particle(randn(), randn(),randn()))     #add robot location guess to each number
 
         self.normalize_particles()
         self.update_robot_pose()
+        #print self.particle_cloud
 
     def normalize_particles(self):
         """ Make sure the particle weights define a valid distribution (i.e. sum to 1.0) """
         pass
         # TODO: implement this
+        #add up all weights of all particles, divide each particle by this number 
+        sumWeight = 0
+        for particle in self.particle_cloud:
+          sumWeight += particle.w
+        
+        for particle in self.particle_cloud:
+          particle.w /=sumWeight
 
     def publish_particles(self, msg):
         particles_conv = []

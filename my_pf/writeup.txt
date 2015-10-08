@@ -1,0 +1,22 @@
+What was the goal of your project?
+  The goal of the project was to allow the robot to figure out where it is in a given space with a known map and lidar data. We accomplished this using a simple particle filter. 
+
+
+How did you solve the problem? (Note: this doesn't have to be super-detailed, you should try to explain what you did at a high-level so that others in the class could reasonably understand what you did).
+
+We first tackled the problem by creating a map. We used the lidar to map a known space and then saved this map to be used later. Next a particle cloud was created using randn() to create a distribution of particles. Next we incorporated the odometry data to modify the particles and give them a more accuarate orientation. After that, we used the difference between the closes object that the particle sees in each direction with what the robot sees in each direction. We re-weight all of the particles based on that data, and then resampled the particles based on their weights. 
+  
+
+
+Describe a design decision you had to make when working on your project and what you ultimately did (and why)? These design decisions could be particular choices for how you implemented some part of an algorithm or perhaps a decision regarding which of two external packages to use in your project.
+  When incorporating the laser data into the particle update, we decided to subtract the distance between the closest object that the particle sees and the closest object that the robot sees. 
+
+
+What if any challenges did you face along the way?
+  We had a lot of trouble both generating the map and importing it into our code. In both scenarios, we struggled for too long by ourselves before asking for help. We were not able to properly resampmle our particles and our localization did not work. The robot assumed it was always in the same corner and the particles disapperared after the robot  began to move.
+
+What would you do to improve your project if you had more time?
+  If we had more time (and Susie was less sick), we would definitely continue debugging our reample_particle function. Right now, the particle cloud disappears, and we can't figure out why. Our robot always thinks it's in the same corner. This is a pretty important part of the particle fliter that we really wanted to get working but couldn't :( We would also probably use a more sophisticated algorithm for reweighting the particles. 
+
+Did you learn any interesting lessons for future robotic programming projects? These could relate to working on robotics projects in teams, working on more open-ended (and longer term) problems, or any other relevant topic.
+  One lesson we took away from this project is that it's totally okay to code seperately on a partner project. Unfortunately, our schedules have not lined up very well the past few weeks. At the beginning, we pushed off working on the project until we could both be there to understand what's going on, but we quickly found ourselves pressed for time. At that point, we started splitting up work, with the understanding that we would teach each other what we had done the next time we met. This ended up working well, though programming together was still more efficient because we were able to help each other work through roadblocks and debug. 

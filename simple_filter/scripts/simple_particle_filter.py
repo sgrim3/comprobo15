@@ -111,18 +111,18 @@ class ParticleFilter(object):
         self.particles = []
 
     def add_particle(self, p):
-        self.particles.append(p)
+        self.particles.append(p)   #add a particle to list of particles
 
     def normalize(self):
-        w_sum = sum([p.weight for p in self.particles])
-        [p.normalize_weight(w_sum) for p in self.particles]
+        w_sum = sum([p.weight for p in self.particles])    #add up all weights
+        [p.normalize_weight(w_sum) for p in self.particles]  #divide each particle's weight by the sum of all the weights
 
     def integrate_observation(self, observation):
         for p in self.particles:
-            p.integrate_observation(observation)
+            p.integrate_observation(observation)    #get front and back likelihood of each particle
 
     def predict(self, delta):
-        for p in self.particles:
+        for p in self.particles:     #predict for each particle
             p.predict(delta)
 
     @staticmethod
@@ -218,13 +218,13 @@ class Particle(object):
 
     def integrate_observation(self, observation):
         """ integrate an observation """
-        self.weight *= self.sensor_model.get_likelihood(observation.north_laser, self.position, 1)
-        self.weight *= self.sensor_model.get_likelihood(observation.south_laser, self.position, -1)
+        self.weight *= self.sensor_model.get_likelihood(observation.north_laser, self.position, 1)   #get likelihood of north laser
+        self.weight *= self.sensor_model.get_likelihood(observation.south_laser, self.position, -1)    #get likelihood of south laser
 
     def predict(self, delta):
         """ predict the next position based on the delta measured using
             the odometry """
-        self.position  = self.sensor_model.sample_prediction(self.position+delta)
+        self.position  = self.sensor_model.sample_prediction(self.position+delta)    #take old position, add change, use that as new
 
     def normalize_weight(self, Z):
         """ adjust the particle weight using the specified
